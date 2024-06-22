@@ -5,6 +5,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from dotenv import load_dotenv
 import os
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,7 +22,7 @@ SENDER_EMAIL_PASSWORD = os.getenv("SENDER_EMAIL_PASSWORD")
 subject = "PDSC Python for Automation Workshop - Certificate of Participation"
 
 
-def send_email(receiver_email):
+def send_email(receiver_email, receiver_name):
     # Create a multipart message and set headers
     message = MIMEMultipart()
     message["Subject"] = subject
@@ -29,7 +30,7 @@ def send_email(receiver_email):
     message["To"] = receiver_email
 
     # Add body content (plain text)
-    body = """Dear Participant,
+    body = f"""Dear {receiver_name},
 
     Thank you for participating in the PDSC Python for Automation workshop!
 
@@ -43,16 +44,20 @@ def send_email(receiver_email):
     message.attach(MIMEText(body, "plain"))
 
     # Attach schedule.pdf file
-    file_path = "./schedule.pdf"
-    with open(file_path, "rb") as attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition",
-            f"attachment; filename= {os.path.basename(file_path)}",
-        )
-        message.attach(part)
+    file_path = "schedule.pdf"
+    try:
+        with open(file_path, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename= {os.path.basename(file_path)}",
+            )
+            message.attach(part)
+    except Exception as e:
+        print(f"Failed to attach file: {e}")
+        return
 
     try:
         print("Initializing SMTP server connection...")
@@ -76,7 +81,8 @@ def send_email(receiver_email):
         smtp.sendmail(
             SENDER_EMAIL_ADDRESS,
             receiver_email,
-            message.as_string())
+            message.as_string()
+        )
         print(f"Email sent successfully to {receiver_email}")
     except Exception as e:
         print(f"Failed to send email to {receiver_email}: {e}")
@@ -87,11 +93,11 @@ def send_email(receiver_email):
         print("SMTP server connection closed.")
 
 
-# List of email addresses to send emails to
-email_list = [
-    "077bct090.susheel@pcampus.edu.np",
-]
+df = pd.read_csv("./sample.csv")
 
-# Send email to each address in the list
-for email in email_list:
-    send_email(email)
+# Iterate through the rows of the DataFrame
+for index, row in df.iterrows():
+    name = row["Name"]
+    email = row["Email"]
+    print(name, email)
+    send_email(email, name)
