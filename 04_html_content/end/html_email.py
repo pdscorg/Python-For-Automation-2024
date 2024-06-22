@@ -1,7 +1,9 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
+from email import encoders
 from dotenv import load_dotenv
 import os
 
@@ -59,6 +61,19 @@ with open("pdsc_logo.png", "rb") as image_file:
     image = MIMEImage(image_file.read())
     image.add_header('Content-ID', '<pdsc_logo>')
     message.attach(image)
+
+# Attach schedule.pdf file
+file_path = "schedule.pdf"
+attachment = open(file_path, "rb")
+
+part = MIMEBase("application", "octet-stream")
+part.set_payload(attachment.read())
+encoders.encode_base64(part)
+part.add_header(
+    "Content-Disposition",
+    f"attachment; filename= {os.path.basename(file_path)}",
+)
+message.attach(part)
 
 print("Initializing SMTP server connection...")
 
