@@ -1,4 +1,8 @@
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from dotenv import load_dotenv
 import os
 
@@ -16,22 +20,41 @@ SENDER_EMAIL_PASSWORD = os.getenv("SENDER_EMAIL_PASSWORD")
 # Define the receiver email address from environment variables
 RECEIVER_EMAIL_ADDRESS = os.getenv("RECEIVER_EMAIL_ADDRESS")
 
-# Define your subject and body for the email
-subject = "Meeting Reminder: Project Update"
-body = """
-Dear Students,
+# Define your subject for the email
+subject = "PDSC Python for Automation Workshop - Certificate of Participation"
 
-This is a reminder about our upcoming project update meeting scheduled for tomorrow at 10:00 AM. 
-Please ensure that you have your progress reports ready and be prepared to discuss any blockers you are facing.
+# Create a multipart message and set headers
+message = MIMEMultipart()
+message["Subject"] = subject
+message["From"] = SENDER_EMAIL_ADDRESS
+message["To"] = RECEIVER_EMAIL_ADDRESS
 
-Looking forward to your participation.
+# Add body content (plain text)
+body = """Dear Participant,
+
+Thank you for participating in the PDSC Python for Automation workshop!
+
+Attached to this email, you will find your certificate of participation.
+
+We hope you found the workshop informative and valuable. Should you have any questions or feedback, feel free to reach out to us.
 
 Best regards,
-Susheel Thapa
+PDSC Team
 """
+message.attach(MIMEText(body, "plain"))
 
-# Construct the email message
-message = f'Subject: {subject}\n\n{body}'
+# Attach schedule.pdf file
+file_path = "schedule.pdf"
+attachment = open(file_path, "rb")
+
+part = MIMEBase("application", "octet-stream")
+part.set_payload(attachment.read())
+encoders.encode_base64(part)
+part.add_header(
+    "Content-Disposition",
+    f"attachment; filename= {os.path.basename(file_path)}",
+)
+message.attach(part)
 
 print("Initializing SMTP server connection...")
 
@@ -51,7 +74,7 @@ print("Logged in to the SMTP server.")
 
 print("Sending the email...")
 # Send the email
-smtp.sendmail(SENDER_EMAIL_ADDRESS, RECEIVER_EMAIL_ADDRESS, message)
+smtp.sendmail(SENDER_EMAIL_ADDRESS, RECEIVER_EMAIL_ADDRESS, message.as_string())
 print("Email sent successfully!")
 
 print("Closing the SMTP server connection...")
