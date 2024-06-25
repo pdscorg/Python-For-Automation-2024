@@ -23,7 +23,7 @@ def create_date_files(folder_path, year):
             newfile.write(content)
         current_date += timedelta(days=1)
 
-for city_num in range(1, 96):
+for city_num in range(1, 101):
     for year in [2023, 2024]:
         folder_path = os.path.join(root_folder, f"city_{city_num}", str(year))
         os.makedirs(folder_path, exist_ok=True)
